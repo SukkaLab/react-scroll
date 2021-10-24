@@ -1,34 +1,20 @@
-import utils from './utils';
 import smooth from './smooth';
 import cancelEvents from './cancel-events';
 import events from './scroll-events';
 
 /*
- * Gets the easing type from the smooth prop within options.
- */
-const getAnimationType = (options) => smooth[options.smooth] || smooth.defaultEasing;
-/*
  * Function helper
  */
 const functionWrapper = (value) => typeof value === 'function' ? value : function () { return value; };
-/*
- * Wraps window properties to allow server side rendering
- */
-const currentWindowProperties = () => {
-  if (typeof window !== 'undefined') {
-    return window.requestAnimationFrame || window.webkitRequestAnimationFrame;
-  }
-};
 
 /*
  * Helper function to never extend 60fps on the webpage.
  */
-const requestAnimationFrameHelper = (() => {
-  return currentWindowProperties() ||
-    function (callback, element, delay) {
-      window.setTimeout(callback, delay || (1000 / 60), new Date().getTime());
-    };
-})();
+const requestAnimationFrameHelper = window.requestAnimationFrame ||
+  window.webkitRequestAnimationFrame ||
+  window.mozRequestAnimationFrame ||
+  window.oRequestAnimationFrame ||
+  window.msRequestAnimationFrame;
 
 const makeData = () => ({
   currentPosition: 0,
@@ -47,14 +33,15 @@ const makeData = () => ({
   delayTimeout: null
 });
 
+const pageXOffsetSupported = 'pageXOffset' in window;
+const isCSS1CompatMode = (document.compatMode || "") === "CSS1Compat";
+
 const currentPositionX = (options) => {
   const containerElement = options.data.containerElement;
   if (containerElement && containerElement !== document && containerElement !== document.body) {
     return containerElement.scrollLeft;
   } else {
-    var supportPageOffset = window.pageXOffset !== undefined;
-    var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
-    return supportPageOffset ? window.pageXOffset : isCSS1Compat ?
+    return pageXOffsetSupported ? window.pageXOffset : isCSS1CompatMode ?
       document.documentElement.scrollLeft : document.body.scrollLeft;
   }
 };
@@ -64,46 +51,8 @@ const currentPositionY = (options) => {
   if (containerElement && containerElement !== document && containerElement !== document.body) {
     return containerElement.scrollTop;
   } else {
-    var supportPageOffset = window.pageXOffset !== undefined;
-    var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
-    return supportPageOffset ? window.pageYOffset : isCSS1Compat ?
+    return pageXOffsetSupported ? window.pageYOffset : isCSS1CompatMode ?
       document.documentElement.scrollTop : document.body.scrollTop;
-  }
-};
-
-const scrollContainerWidth = (options) => {
-  const containerElement = options.data.containerElement;
-  if (containerElement && containerElement !== document && containerElement !== document.body) {
-    return containerElement.scrollWidth - containerElement.offsetWidth;
-  } else {
-    let body = document.body;
-    let html = document.documentElement;
-
-    return Math.max(
-      body.scrollWidth,
-      body.offsetWidth,
-      html.clientWidth,
-      html.scrollWidth,
-      html.offsetWidth
-    );
-  }
-};
-
-const scrollContainerHeight = (options) => {
-  const containerElement = options.data.containerElement;
-  if (containerElement && containerElement !== document && containerElement !== document.body) {
-    return containerElement.scrollHeight - containerElement.offsetHeight;
-  } else {
-    let body = document.body;
-    let html = document.documentElement;
-
-    return Math.max(
-      body.scrollHeight,
-      body.offsetHeight,
-      html.clientHeight,
-      html.scrollHeight,
-      html.offsetHeight
-    );
   }
 };
 
@@ -198,7 +147,7 @@ const animateTopScroll = (scrollOffset, options, to, target) => {
   options.data.to = to;
   options.data.target = target;
 
-  let easing = getAnimationType(options);
+  let easing = smooth[options.smooth] || smooth.defaultEasing;
   let easedAnimate = animateScroll.bind(null, easing, options);
 
   if (options && options.delay > 0) {
@@ -218,42 +167,6 @@ const animateTopScroll = (scrollOffset, options, to, target) => {
 
 };
 
-const proceedOptions = (options) => {
-  options = Object.assign({}, options);
-  options.data = options.data || makeData();
-  options.absolute = true;
-  return options;
-}
-
-const scrollToTop = (options) => {
-  animateTopScroll(0, proceedOptions(options));
-};
-
-const scrollTo = (toPosition, options) => {
-  animateTopScroll(toPosition, proceedOptions(options));
-};
-
-const scrollToBottom = (options) => {
-  options = proceedOptions(options);
-  setContainer(options);
-  animateTopScroll(options.horizontal
-    ? scrollContainerWidth(options)
-    : scrollContainerHeight(options),
-    options);
-};
-
-const scrollMore = (toPosition, options) => {
-  options = proceedOptions(options);
-  setContainer(options);
-  const currentPosition = options.horizontal ? currentPositionX(options) : currentPositionY(options)
-  animateTopScroll(toPosition + currentPosition, options);
-};
-
 export default {
   animateTopScroll,
-  getAnimationType,
-  scrollToTop,
-  scrollToBottom,
-  scrollTo,
-  scrollMore,
 };

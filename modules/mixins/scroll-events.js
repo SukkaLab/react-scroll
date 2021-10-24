@@ -1,11 +1,10 @@
-
 const Events = {
-	registered : {},
-	scrollEvent : {
+	registered: {},
+	scrollEvent: {
 		register: (evtName, callback) => {
 			Events.registered[evtName] = callback;
 		},
-		remove:(evtName) => {
+		remove: (evtName) => {
 			Events.registered[evtName] = null;
 		}
 	}

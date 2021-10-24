@@ -1,19 +1,3 @@
-const updateHash = (hash, historyUpdate) => {
-  const hashVal = hash.indexOf("#") === 0 ? hash.substring(1) : hash;
-  const hashToUpdate = hashVal ? `#${hashVal}` : "";
-  const curLoc = window && window.location;
-  const urlToPush = hashToUpdate
-    ? curLoc.pathname + curLoc.search + hashToUpdate
-    : curLoc.pathname + curLoc.search;
-  historyUpdate
-    ? history.pushState(null, "", urlToPush)
-    : history.replaceState(null, "", urlToPush);
-};
-
-const getHash = () => {
-  return window.location.hash.replace(/^#/, "");
-};
-
 const filterElementInContainer = (container) => (element) =>
   container.contains
     ? container != element && container.contains(element)
@@ -38,9 +22,9 @@ const scrollOffset = (c, t, horizontal) => {
   if (horizontal) {
     return c === document
       ? t.getBoundingClientRect().left + (window.scrollX || window.pageXOffset)
-      : getComputedStyle(c).position !== "static"
-      ? t.offsetLeft
-      : t.offsetLeft - c.offsetLeft;
+      : isPositioned(c)
+        ? t.offsetLeft
+        : t.offsetLeft - c.offsetLeft;
   } else {
     if (c === document) {
       return (
@@ -106,8 +90,6 @@ const scrollOffset = (c, t, horizontal) => {
 };
 
 export default {
-  updateHash,
-  getHash,
   filterElementInContainer,
   scrollOffset,
 };

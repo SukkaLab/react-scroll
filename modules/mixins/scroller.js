@@ -16,7 +16,7 @@ export default {
   },
 
   unregister: (name) => {
-    delete __mapped[name];
+    __mapped[name] = null;
   },
 
   get: (name) => __mapped[name] || document.getElementById(name) || document.getElementsByName(name)[0] || document.getElementsByClassName(name)[0],
@@ -34,7 +34,7 @@ export default {
       return;
     }
 
-    props = Object.assign({}, props, { absolute: false });
+    props = { ...props, absolute: false };
 
     let containerId = props.containerId;
     let container = props.container;
